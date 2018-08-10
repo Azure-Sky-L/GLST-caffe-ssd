@@ -1,4 +1,4 @@
-#example: python batch_run_full_vgg_voting_for_video.py 
+#example: python batch_run_full_vgg_voting_for_video.py
 import os
 import time
 import sys
@@ -45,7 +45,7 @@ if __name__=='__main__':
     #argv10=1056
 
     # gpu_i
-    argv11=str(sys.argv[1])
+    argv11=str(sys.argv[3])
 #  argv11 = str(sys.argv[0])
    # vis
     argv12=str(0)
@@ -53,71 +53,75 @@ if __name__=='__main__':
     # dete_interval
     argv13=str(1)   #****************************************************************
 
-    # root_path = '/home/reiduser/ReidLabel_workspace/label_workspace/label_result'            
+    # root_path = '/home/reiduser/ReidLabel_workspace/label_workspace/label_result'
     root_path = '/mnt/sde1/liuhaohome/tecmint/workspace/label_result'
     img_path = '/mnt/sde1/liuhaohome/tecmint/workspace/check_result_img'
-    for name in os.listdir(root_path):
-        name_path = os.path.join(root_path,name)
-        img_path = os.path.join(img_path,name)
-        if not os.path.isdir(name_path):
+    video_path = '/mnt/sde1/liuhaohome/tecmint/workspace/reid_mount'
+    id_path = str(sys.argv[2])
+    sty_path = str(sys.argv[1])
+    video_path = os.path.join(video_path,sty_path)
+    video_path = os.path.join(video_path,id_path)
+    root_path = os.path.join(root_path,sty_path)
+    img_path = os.path.join(img_path,sty_path)
+    
+    print "img_path:", img_path
+    print "id_path:" ,id_path
+    print "sty_path:",sty_path
+    print "video_path:", video_path
+    if not os.path.exists(img_path):
+        os.makedirs(img_path)
+    img_path = os.path.join(img_path,id_path)
+    if not os.path.exists(img_path):
+        os.makedirs(img_path)
+    for video in os.listdir(video_path):
+        if '.mp4' not in video:
             continue
-        #print(name_path)
-        for data in os.listdir(name_path):
-            data_path = os.path.join(name_path,data)
-            img_path = os.path.join(img_path,data)
-            if os.path.exists(img_path):
-                shutil.retree(img_path)
-            os.makedirs(img_path)
-            result_path = os.path.join(data_path, 'result')
-            video_path = os.path.join(data_path, 'video')
-            if not os.path.exists(video_path):
-                video_path = os.path.join(data_path,'video-finish')
-            if not os.path.exists(result_path):
-                continue
-	    if not os.path.exists(video_path):
-  	        continue
-            
-            path_a = []
-            path_b = []
+        print "video:",video
+        video_new = video[:video.rfind('.')]
+        print "video_new:", video_new
+        video_path_f = os.path.join(video_path,video)
+        print "video_path66:", video_path_f
 
-	    if len(os.listdir(result_path)) == 0 or len(os.listdir(video_path)) == 0:
-	    	continue
-            for i in os.listdir(video_path):
-                if '.mp4' in i:
-                    path_a.append(i)
-            for i in os.listdir(result_path):		
-		path_b.append(i)
-            #print(result_path)
-            for b,a in zip(path_b, path_a):
-                # argv14 = os.path.join(result_path, a)
-                #print(a)
-                #print(b)
-                argv14 = os.path.join(result_path,b)
-                argv7 = os.path.join(video_path,a)
-                argvk = os.path.join(video_path,a)
- 	        argvy = os.path.join(video_path,a)                
+        for name in os.listdir(root_path):
+            if id_path in name:
+                print("OKOKOKOKOKOK")
+                txt_path = os.path.join(root_path,name)
+                txt_path = os.path.join(txt_path,'result')
+
+                img_path_f = os.path.join(img_path,video_new)
+                if os.path.exists(img_path_f):
+                    shutil.rmtree(img_path_f)
+                os.makedirs(img_path_f)
+                print "img_path_f:" ,img_path_f
+                txt_path = os.path.join(txt_path,video_new + '_result.txt')
+                print('.txt path: '+  txt_path)
+                argv14 = txt_path
+                argv15 = '/' + video_new + '/'
+                argv7 = video_path_f
+                argvk = video_path_f
+ 	        argvy = video_path_f
 	        start=time.time()
-
                 argv8 = argvk[:argvk.rfind('.')] + '_ssd_result'
                 if os.path.exists(argv8):
                     os.remove(argv8)
                 print 'get', argv8
+                print '6666666666666'
+                print 'arvg7:', argv7
+                print 'arvg8:' ,argv8
+                print 'arvg14:', argv14
+                print 'argv15:',argv15
+                print 'txt_path',txt_path
+                print "video_path_f",video_path_f
 #     print prefix
-	        print("@@@@@@@@@@@@@@@@@@@@@@@@@")
-	        print(a)
-	        print(b)		
-	        print(argv7)
-		print(argv8)
-		print(argv14)
-		print(argvk)
 #                    print '--------------------------'
-                excuted_cmd = CAFFE+' '+argv1+' '+argv2+' '+argv3+' '+argv4+' '+argv5+' '+argv6+' '+ argv7+ ' '+ argv8+' ' + argv9+' '+argv10+' '+argv11+ ' '+argv12 +' ' +argv13 +' ' +argv14 +' > '+ argvy[:argvy.rfind('.')]+'_log_detection'
+                excuted_cmd = CAFFE+' '+argv1+' '+argv2+' '+argv3+' '+argv4+' '+argv5+' '+argv6+' '+ argv7+ ' '+ argv8+' ' + argv9+' '+argv10+' '+argv11+ ' '+argv12 +' ' +argv13 + ' ' + argv15  + ' ' +argv14 +' > '+ argvy[:argvy.rfind('.')]+'_log_detection'
                 print 'excuting_cmd:'
 #                    print excuted_cmd
                 print '---------------------------'
 #                    os.system(excuted_cmd)
                 end=time.time()
                 last=end-start
-		os.system(excuted_cmd)
+	        os.system(excuted_cmd)
+                print(end - start)
 #                message="batch_id: %s/n last: %s status: done" %(video_dir,last)
 #                subprocess.call([os.path.join(os.getcwd(),"hipchat.sh"),message])

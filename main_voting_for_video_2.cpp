@@ -280,7 +280,7 @@ vector<BBOX> get_bbox_single_input(CaffeModel& ssd_detector, Mat image, int resi
     return in;
 }
 
-vector<vector<BBOX> > get_detection_result_for_video(CaffeModel& ssd_detector, string video_list, string output_list, int resize_height, int resize_width, int vis, int dete_interval, string biaozhu_result) {
+vector<vector<BBOX> > get_detection_result_for_video(string f_ ,CaffeModel& ssd_detector, string video_list, string output_list, int resize_height, int resize_width, int vis, int dete_interval, string biaozhu_result) {
    
     int show_result = vis;
 //    FILE *fcin  = fopen(image_list.c_str(),"r");
@@ -289,6 +289,7 @@ vector<vector<BBOX> > get_detection_result_for_video(CaffeModel& ssd_detector, s
 //      cout << "can not open filelist" << endl;
 //    }
     VideoCapture in_video(video_list.c_str());
+    cout << "@@@@@@@@@@@@@@@@@@@@@@@" << video_list.c_str() << endl;
     if(!in_video.isOpened()){
         cout<< "can't open video" << video_list <<endl;
         
@@ -306,7 +307,7 @@ vector<vector<BBOX> > get_detection_result_for_video(CaffeModel& ssd_detector, s
     ifstream bz_result;               // **********************************************read biaozhu result  ***********
     bz_result.open(biaozhu_result.data());
     string bz_lines;
-
+    
     vector<Scalar> color;
     color.push_back(Scalar(255,0,0));
     color.push_back(Scalar(0,255,0));
@@ -322,13 +323,22 @@ vector<vector<BBOX> > get_detection_result_for_video(CaffeModel& ssd_detector, s
     tags.push_back("tricycle");
     vector<string> v_biao;
     SplitString(biaozhu_result, v_biao, "/");
+    vector<string> v_f;
+    SplitString(f_,v_f, "/");
+    cout << "6666666666666666666" << v_f[1] << endl;
+    vector<string> v_video;
+    SplitString(video_list,v_video, "/");    
+    cout << "*******************************" << biaozhu_result.data() << endl;
+    for(vector<string>::size_type i = 0; i != v_biao.size(); ++i)
+         cout << "******************************" << v_biao[i] << endl;
+
         
     while(getline(bz_result,bz_lines)){
         vector<string> bz_line;
         stringstream bbox_file;
         SplitString(bz_lines, bz_line,",");        // ****************************** split biaozhu lines *******************
-        for(vector<string>::size_type i = 0; i != bz_line.size(); ++i)
-            cout << "+++++++++++++++++++++++++++++++++++++++++" << bz_line[i] << endl;
+      //  for(vector<string>::size_type i = 0; i != bz_line.size(); ++i)
+        //    cout << "+++++++++++++++++++++++++++++++++++++++++" << bz_line[i] << endl;
         float bz_x = atoi(bz_line[2].c_str());
         float bz_y = atoi(bz_line[3].c_str());
         float bz_w = atoi(bz_line[4].c_str());
@@ -342,33 +352,57 @@ vector<vector<BBOX> > get_detection_result_for_video(CaffeModel& ssd_detector, s
         bbox_file.clear();                         // ****************************** save crop img path *******************
        // bbox_file << "/home/reiduser/ReidLabel_workspace/label_workspace/check_result_img/" << bz_line[1] << "/"
          //         <<bz_line[1] << "_" << bz_line[0] << ".jpg";
-        bbox_file << "/mnt/sde1/liuhaohome/wubingfang/liuyang_data/img_result/"  << bz_line[1] << "/" << bz_line[1] << "_" << bz_line[0] << "M_3.0_"<< ".jpg";
-       // bbox_file << "/"
+        bbox_file << "/mnt/sde1/liuhaohome/tecmint/workspace/check_result_img/" << v_biao[7] << "/"  << v_video[8] << "/" << v_f[1] << "/" << bz_line[1] << "/" << bz_line[1] << "_" << bz_line[0]  << "M_3.0_"<< ".jpg";
+       // bbox_file << "/";
         string bbox_file_name ;
         bbox_file >> bbox_file_name;
 
         cout << "+++++++++++++++++++++++++++++++++++++++++" << bbox_file_name << endl;
 
         char sub_dir_path[300];
-  //	stringstream new_path;
-//	new_path << << "/mnt/sde1/liuhaohome/wubingfang/liuyang_data/result/" << v_biao[6] << "/" v_biao[7] << "/";
-//	string nnew_path;
-//	new_path >> nnew_path;
-        sprintf(sub_dir_path,"/mnt/sde1/liuhaohome/wubingfang/liuyang_data/img_result/%i", atoi(bz_line[1].c_str()));
-      //  sprintf(sub_dir_path, "%s%i",nnew_path,atoi(bz_line[1].c_ster()));
-	cout << "**************************" << endl;
+        char sub_new[300];  
+   /* stringstream new_path;
+	new_path << "/mnt/sde1/liuhaohome/tecmint/workspace/check_result_img/" << v_biao[7] << "/" << v_video[7] << "/" << v_video[8];
+	string new_p;
+	new_path >> new_p;*/
+       // sprintf(sub_dir_path,"/home/reiduser/ReidLabel_workspace/label_workspace/check_result_img/%i", atoi(bz_line[1].c_str()));
+      // sprintf(sub_dir_path, "%s%i",new_p, atoi(bz_line[1].c_str()));
+      //  sprintf(sub_dir_path, "%s",new_p);
+       // sprintf(sub_dir_path,atoi(bz_line[1].c_str()));
+         sprintf(sub_dir_path,"/mnt/sde1/liuhaohome/tecmint/workspace/check_result_img/%s/%s/%s/%i",v_biao[7].data(), v_video[8].data(),v_f[1].data(), atoi(bz_line[1].c_str() ));
+         cout << "@@@@@@@@@@@@@@@@@@@@@" << sub_dir_path << endl;
+       // sprintf(sub_new,"/mnt/sde1/liuhaohome/tecmint/workspace/check_result_img/%s/%s",v_biao[7].data(), v_biao[8].data());
+       // cout << "@@@@@@@@@@@@@@@@@@@@@@@@" << sub_new << endl;
+         // sprintf(sub_dir_path,"%s",v_biao[8].data());
+        // cout << "@@@@@@@@@@@@@@@@@@@@@" << sub_dir_path << endl;
+        // sprintf(sub_dir_path,"%i",atoi(bz_line[1].c_str()));
+        // cout << "@@@@@@@@@@@@@@@@@@@@@" << sub_dir_path << endl;
+         //  sprintf("/mnt/sde1/liuhaohome/tecmint/workspace/check_result_img/%s/%s/%i",sizeof(sub_dir_path),v_biao[7],v_biao[8], atoi(bz_line[1].c_str() ));
+    cout << "**************************" << endl;
         cout << string(sub_dir_path) << endl;
+      /*  if( access(sub_new,0) != -1 ){
+            cout << "exists path: " << string(sub_new) << endl; 
+        }
+        else{
+            cout << "make dir path:" << string(sub_new) << endl;
+            const int err = mkdir(sub_new,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+            if(err == -1)
+                printf("Error creating directory!\n------------------------------");
+        } */
         if(access(sub_dir_path, 0) != -1 ){
             cout << "exist path: " << string(sub_dir_path) << endl;}
         else{
             cout << "make dir path: " << string(sub_dir_path) << endl;
             const int dir_err = mkdir(sub_dir_path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+           //   const int dir_err = mkdir(sub_dir_path,  S_IRWXU);
             if (-1 == dir_err){
                 printf("Error creating directory!\n----------------------------------");
-                continue;
+              //  continue;
             }
         }
-
+       // cout << "@@@@@@@@@@@@@@@@@@" << endl;
+      //  printf(sub_dir_path); 
+      //  printf( atoi( bz_line[0].c_str()) );
 
         for(int cur_frame = 0; cur_frame < atoi(bz_line[0].c_str())+20; cur_frame ++){             // **************************** if cur_frame == biaozhu_frame ************
             if (cur_frame == atoi(bz_line[0].c_str())){
@@ -376,18 +410,27 @@ vector<vector<BBOX> > get_detection_result_for_video(CaffeModel& ssd_detector, s
                 Mat img;
                 in_video.set(CV_CAP_PROP_POS_FRAMES, cur_frame);
                 in_video.read(img);
+                
 
-            /*    for (int dqx = 1; dqx <= 1; dqx ++) {
+                string original;
+                stringstream cur_original;
+
+              /*  cur_original <<  "/mnt/sde1/liuhaohome/tecmint/workspace/check_result_img/original_imgs/" << cur_frame << ".jpg";
+                cur_original >> original;
+                imwrite(original,img);
+               */
+              /*  for (int dqx = 1; dqx <= 1; dqx ++) {
                     for (int dqy = 1; dqy <= 1; dqy ++) {
                         rectangle(img, Rect(bz_x+dqx, bz_y+dqy, bz_w, bz_h), (255,0,0));}} //???????????????????????????????????????
-
-                string cur_frame2;
+                */
+              /*  string cur_frame2;
                 stringstream cur_frame1;
-                cur_frame1 << "/mnt/sde1/liuhaohome/wubingfang/liuyang_data/result_img0/"
-                  << cur_frame << ".jpg";
+               // cur_frame1 << "/mnt/sde1/liuhaohome/wubingfang/liuyang_data/result_img0/"
+                 // << cur_frame << ".jpg";
+                cur_frame1 << "/mnt/sde1/liuhaohome/tecmint/workspace/check_result_img/all_imgs/" << cur_frame << ".jpg";
                 cur_frame1 >> cur_frame2;
-	        imwrite(cur_frame2, img);   */
-
+	        imwrite(cur_frame2, img);   
+             */
                 cout << " ========================cur_frame : "<< cur_frame <<endl;
                 if (img.empty()) {
                     cur_frame += dete_interval;
@@ -439,8 +482,8 @@ vector<vector<BBOX> > get_detection_result_for_video(CaffeModel& ssd_detector, s
                         if(cls == 3 || cls == 4){          // **************************** crop image *************************************
                             fprintf(fid, "%.2f %.2f %.2f %.2f %.2f \n",score, xmin, ymin, xmax, ymax);                        
                             float distance1 = sqrt((bz_x_centre - x_centre)*(bz_x_centre - x_centre) + (bz_y_centre - y_centre)*(bz_y_centre - y_centre));
-                        
-                        /*    for (int dx = 1; dx <= 1; dx ++) {
+                          
+                          /*  for (int dx = 1; dx <= 1; dx ++) {
                                 for (int dy = 1; dy <= 1; dy ++) {
                                     rectangle(img, Rect(xmin+dx, ymin+dy, xmax-xmin+dx+dx, ymax-ymin+dx+dx), color[cls]);
                                 }
@@ -455,7 +498,7 @@ vector<vector<BBOX> > get_detection_result_for_video(CaffeModel& ssd_detector, s
 
                             cout << " ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~distance1: "<< distance1  << endl;
 
-                        } 
+                        }
                         ///fprintf(fid, "%d %.2f %.2f %.2f %.2f %.2f ", cls, score, xmin, ymin, xmax, ymax);
                    //     BBOX bbox;
                    //     bbox.cls = cls;
@@ -485,8 +528,8 @@ vector<vector<BBOX> > get_detection_result_for_video(CaffeModel& ssd_detector, s
 
                 */
 
-                int margin_x = 0.30 * (xmax_min - xmin_min);
-                int margin_y = 0.30 * (ymax_min - ymin_min);
+                int margin_x = 0.3 * (xmax_min - xmin_min);
+                int margin_y = 0.3 * (ymax_min - ymin_min);
 
 
                 int lx = max(0, xmin_min - margin_x);
@@ -541,8 +584,8 @@ int main(int argc, char** argv) {
 
   int vis = atoi(argv[12]);
   int dete_interval = atoi(argv[13]);
-
-  string biaozhu_result = argv[14];
+  string f_ = argv[14];
+  string biaozhu_result = argv[15];
 
 
   cout << " ===================================================test start  1 "<<endl;
@@ -551,7 +594,7 @@ int main(int argc, char** argv) {
 
   cout << " ===================================================test start  2 "<<endl;
   //car_model_classifier(car_model_classifier, );
-  vector<vector<BBOX> > detected_bboxes = get_detection_result_for_video(ssd_detector,video_list, output_list, resize_height, resize_width, vis, dete_interval, biaozhu_result); 
+  vector<vector<BBOX> > detected_bboxes = get_detection_result_for_video(f_,ssd_detector,video_list, output_list, resize_height, resize_width, vis, dete_interval,biaozhu_result); 
 
   return 0;
 }

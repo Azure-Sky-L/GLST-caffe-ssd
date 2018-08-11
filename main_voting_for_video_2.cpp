@@ -352,7 +352,14 @@ vector<vector<BBOX> > get_detection_result_for_video(string f_ ,CaffeModel& ssd_
         bbox_file.clear();                         // ****************************** save crop img path *******************
        // bbox_file << "/home/reiduser/ReidLabel_workspace/label_workspace/check_result_img/" << bz_line[1] << "/"
          //         <<bz_line[1] << "_" << bz_line[0] << ".jpg";
-        bbox_file << "/mnt/sde1/liuhaohome/tecmint/workspace/check_result_img/" << v_biao[7] << "/"  << v_video[8] << "/" << v_f[1] << "/" << bz_line[1] << "/" << bz_line[1] << "_" << bz_line[0]  << "M_3.0_"<< ".jpg";
+        bbox_file << "/mnt/sde1/liuhaohome/tecmint/workspace/check_result_img/" << v_biao[7] << "/"  << v_video[8] << "/" << v_f[1] << "/" << bz_line[1] << "/" << bz_line[1] << "_" << bz_line[0]  << "M_0.3_"<< ".jpg";
+       // 14:58
+        stringstream bbox_test;
+        bbox_test.clear();
+        bbox_test << "/mnt/sde1/liuhaohome/tecmint/workspace/check_result_img/" << v_biao[7] << "/"  << v_video[8] << "/" << v_f[1] << "/" << bz_line[1] << "/" <<     bz_line[1] << "_" << bz_line[0]  << "M_0.3_test" << ".jpg";
+        string bbox_test_name;
+        bbox_test >> bbox_test_name;
+
        // bbox_file << "/";
         string bbox_file_name ;
         bbox_file >> bbox_file_name;
@@ -411,6 +418,8 @@ vector<vector<BBOX> > get_detection_result_for_video(string f_ ,CaffeModel& ssd_
                 in_video.set(CV_CAP_PROP_POS_FRAMES, cur_frame);
                 in_video.read(img);
                 
+                //16:38
+               // imwrite(bbox_test_name,img);
 
                 string original;
                 stringstream cur_original;
@@ -531,20 +540,69 @@ vector<vector<BBOX> > get_detection_result_for_video(string f_ ,CaffeModel& ssd_
                 int margin_x = 0.3 * (xmax_min - xmin_min);
                 int margin_y = 0.3 * (ymax_min - ymin_min);
 
-
                 int lx = max(0, xmin_min - margin_x);
                 int ly = max(0, ymin_min - margin_y);
                 int rx = min(img.cols, xmax_min + margin_x);
                 int ry = min(img.rows, ymax_min + margin_y);
+                
                 Rect rect(lx ,ly, max(0, rx - lx), max(0, ry - ly));
-              //  Rect rect(max(0,xmin_min-15) ,max(0,ymin_min-15) , max(0, xmax_min - xmin_min+30), max(0, ymax_min - ymin_min+30));
-
+              //  Rect rect(max(0,xmin_min-15) ,max(0,ymin_min-15) , max(0, xmax_min - xmin_min+30), max(0, ymax_min - ymin_min+30))
                 Mat image_crop = Mat(img, rect);
                 Mat image_copy = image_crop.clone();
-
-                cout << " =============+++++===========crop image  lx: "<< lx << "  ly:  " <<  ly << "  rx:  " << rx << "  ry:  " << ry << endl;
-
+               // imwrite(bbox_test_name,img);
+                //14.55
+                int tx = max(xmin_min - margin_x, xmin_min), ty = max(ymin_min - margin_y, ymin_min);
+                int ttx = min(xmax_min + margin_x, xmax_min) ,tty = min(ymax_min + margin_y, ymax_min);
+                printf("555555555555555555555555\n");
+                printf("%d %d %d %d\n",tx,ty,ttx,tty);
+                printf("%d %d %d %d\n",lx,ly,rx,ry);
+                printf("%d %d\n",margin_x,margin_y);
+                printf("%f %f %f %f\n",xmin_min,ymin_min,xmax_min,ymax_min);
+                printf("%d %d\n",img.cols,img.rows);
                 imwrite(bbox_file_name, image_copy);
+                Mat M_img = imread(bbox_file_name);
+                printf("********M_img.cols*****%d************\n",M_img.cols);
+                printf("********rx-lx%d**********************\n",rx-lx);
+                if(xmax_min + margin_x >= img.cols || ymax_min + margin_y >= img.rows || xmin_min - margin_x < 0 || ymin_min - margin_y < 0){
+               //     Mat M_img = imread(bbox_file_name);
+                 //   printf("*************%d************\n",M_img.cols);
+                    Mat M(ymax_min - ymin_min + 2 * margin_y, xmax_min - xmin_min + 2 * margin_x, CV_8UC3);
+                    for(int i = 0; i < M.rows; i++){
+                        for(int j = 0; j < M.cols; j++){
+                            for(int k = 0; k < 3; k++)
+                                M.at<Vec3b>(i,j)[k] = 20;
+                        }
+                    }
+                   if(xmax_min + margin_x >= img.cols || ymax_min + margin_y >= img.rows){
+                        for(int i = 0; i < M.rows; i++){
+                            for(int j = 0; j < M.cols; j++){
+                                if(i <= M_img.rows && j <= M_img.cols){
+                                    for(int k = 0; k < 3; k++){
+                                        M.at<Vec3b>(i,j)[k] = M_img.at<Vec3b>(i,j)[k];
+                                    }
+                                }
+                            }
+                        }
+                    }
+                   else if(xmin_min - margin_x < 0 || ymin_min - margin_y < 0){
+                        int xx = max(0,margin_x - xmin_min);
+                        int yy = max(0,margin_y - ymin_min);
+                        for(int i = 0; i + yy < M.rows; i++)
+                            for(int j = 0; j + xx < M.cols; j++)
+                                if(i <= M_img.rows && j <= M_img.cols)
+                                    for(int k = 0; k < 3; k++)
+                                        M.at<Vec3b>(i + yy,j + xx)[k] = M_img.at<Vec3b>(i,j)[k];
+                    }   
+                    Mat M_ = M.clone();
+                    imwrite(bbox_test_name,M_);
+                }
+                Rect rect_t(tx, ty, max(ttx - tx,0),max( tty - ty,0));
+                Mat img_test = Mat(img, rect_t);
+                Mat img_t = img_test.clone();
+               // imwrite(bbox_test_name , img_t);
+                
+                cout << " =============+++++===========crop image  lx: "<< lx << "  ly:  " <<  ly << "  rx:  " << rx << "  ry:  " << ry << endl;
+                // imwrite(bbox_file_name, image_copy);
 
             }
             //ret.push_back(result_this_image);

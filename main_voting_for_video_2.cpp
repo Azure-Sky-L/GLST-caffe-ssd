@@ -280,8 +280,21 @@ vector<BBOX> get_bbox_single_input(CaffeModel& ssd_detector, Mat image, int resi
     return in;
 }
 
+float IOU(float a_x,float a_y,float a_w,float a_h, float b_x,float b_y,float b_w,float b_h){
+    int all = a_w * a_h + b_w * b_h;
+    int x_left = max(a_x, b_x);
+    int y_left = max(a_y, b_y);
+    int x_right = min(a_x + a_w, b_x + b_w);
+    int y_right = min(a_y + a_h, b_y + b_h);
+    int merge_area = max(0, y_right - y_left) * max(0, x_right - x_left);
+
+    return 1.0 * merge_area / (all - merge_area);
+}
+
 vector<vector<BBOX> > get_detection_result_for_video(string f_ ,CaffeModel& ssd_detector, string video_list, string output_list, int resize_height, int resize_width, int vis, int dete_interval, string biaozhu_result) {
-   
+    
+    int ans = 0;   
+
     int show_result = vis;
 //    FILE *fcin  = fopen(image_list.c_str(),"r");
 //    if(!fcin) {
@@ -337,8 +350,8 @@ vector<vector<BBOX> > get_detection_result_for_video(string f_ ,CaffeModel& ssd_
         vector<string> bz_line;
         stringstream bbox_file;
         SplitString(bz_lines, bz_line,",");        // ****************************** split biaozhu lines *******************
-      //  for(vector<string>::size_type i = 0; i != bz_line.size(); ++i)
-        //    cout << "+++++++++++++++++++++++++++++++++++++++++" << bz_line[i] << endl;
+        for(vector<string>::size_type i = 0; i != bz_line.size(); ++i)
+            cout << "+++++++++++++++++++++++++++++++++++++++++" << bz_line[i] << endl;
         float bz_x = atoi(bz_line[2].c_str());
         float bz_y = atoi(bz_line[3].c_str());
         float bz_w = atoi(bz_line[4].c_str());
@@ -352,11 +365,14 @@ vector<vector<BBOX> > get_detection_result_for_video(string f_ ,CaffeModel& ssd_
         bbox_file.clear();                         // ****************************** save crop img path *******************
        // bbox_file << "/home/reiduser/ReidLabel_workspace/label_workspace/check_result_img/" << bz_line[1] << "/"
          //         <<bz_line[1] << "_" << bz_line[0] << ".jpg";
-        bbox_file << "/mnt/sde1/liuhaohome/tecmint/workspace/check_result_img/" << v_biao[7] << "/"  << v_video[8] << "/" << v_f[1] << "/" << bz_line[1] << "/" << bz_line[1] << "_" << bz_line[0]  << "M_0.3_"<< ".jpg";
-       // 14:58
+       bbox_file << "/mnt/sde1/liuhaohome/tecmint/workspace/check_result_img/" << v_biao[7] << "/"  << v_video[8] << "/" << v_f[1] << "/" << bz_line[1] << "/" << bz_line[1] << "_" << bz_line[0]  << "M_0.3_"<< ".jpg";
+      //8.11_15:34
+      //  bbox_file << "/mnt/sde1/liuhaohome/8_11_test/" << v_biao[7] << "/"  << v_video[8] << "/" << v_f[1] << "/" << bz_line[1] << "/" <<   bz_line[1] << "_" << bz_line[0]  << "M_0.3_"<< ".jpg";
+         // 14:58
         stringstream bbox_test;
         bbox_test.clear();
         bbox_test << "/mnt/sde1/liuhaohome/tecmint/workspace/check_result_img/" << v_biao[7] << "/"  << v_video[8] << "/" << v_f[1] << "/" << bz_line[1] << "/" <<     bz_line[1] << "_" << bz_line[0]  << "M_0.3_test" << ".jpg";
+      // bbox_test << "/mnt/sde1/liuhaohome/8_11_test/" << v_biao[7] << "/"  << v_video[8] << "/" << v_f[1] << "/" << bz_line[1] << "/" <<     bz_line[1] << "_" << bz_line[0]  << "M_0.3_test" << ".jpg";
         string bbox_test_name;
         bbox_test >> bbox_test_name;
 
@@ -376,7 +392,9 @@ vector<vector<BBOX> > get_detection_result_for_video(string f_ ,CaffeModel& ssd_
       // sprintf(sub_dir_path, "%s%i",new_p, atoi(bz_line[1].c_str()));
       //  sprintf(sub_dir_path, "%s",new_p);
        // sprintf(sub_dir_path,atoi(bz_line[1].c_str()));
-         sprintf(sub_dir_path,"/mnt/sde1/liuhaohome/tecmint/workspace/check_result_img/%s/%s/%s/%i",v_biao[7].data(), v_video[8].data(),v_f[1].data(), atoi(bz_line[1].c_str() ));
+       //8.11
+      //  sprintf(sub_dir_path,"/mnt/sde1/liuhaohome/8_11_test/%s/%s/%s/%i",v_biao[7].data(), v_video[8].data(),v_f[1].data(), atoi(bz_line[1].c_str() )); 
+        sprintf(sub_dir_path,"/mnt/sde1/liuhaohome/tecmint/workspace/check_result_img/%s/%s/%s/%i",v_biao[7].data(), v_video[8].data(),v_f[1].data(), atoi(bz_line[1].c_str() ));
          cout << "@@@@@@@@@@@@@@@@@@@@@" << sub_dir_path << endl;
        // sprintf(sub_new,"/mnt/sde1/liuhaohome/tecmint/workspace/check_result_img/%s/%s",v_biao[7].data(), v_biao[8].data());
        // cout << "@@@@@@@@@@@@@@@@@@@@@@@@" << sub_new << endl;
@@ -411,13 +429,13 @@ vector<vector<BBOX> > get_detection_result_for_video(string f_ ,CaffeModel& ssd_
       //  printf(sub_dir_path); 
       //  printf( atoi( bz_line[0].c_str()) );
 
-        for(int cur_frame = 0; cur_frame < atoi(bz_line[0].c_str())+20; cur_frame ++){             // **************************** if cur_frame == biaozhu_frame ************
+        for(int cur_frame = 0; cur_frame < atoi(bz_line[0].c_str()) + 20; cur_frame ++){             // **************************** if cur_frame == biaozhu_frame ************
             if (cur_frame == atoi(bz_line[0].c_str())){
 
                 Mat img;
                 in_video.set(CV_CAP_PROP_POS_FRAMES, cur_frame);
                 in_video.read(img);
-                
+              //  imwrite(bbox_test_name, img);
                 //16:38
                // imwrite(bbox_test_name,img);
 
@@ -432,15 +450,6 @@ vector<vector<BBOX> > get_detection_result_for_video(string f_ ,CaffeModel& ssd_
                     for (int dqy = 1; dqy <= 1; dqy ++) {
                         rectangle(img, Rect(bz_x+dqx, bz_y+dqy, bz_w, bz_h), (255,0,0));}} //???????????????????????????????????????
                 */
-              /*  string cur_frame2;
-                stringstream cur_frame1;
-               // cur_frame1 << "/mnt/sde1/liuhaohome/wubingfang/liuyang_data/result_img0/"
-                 // << cur_frame << ".jpg";
-                cur_frame1 << "/mnt/sde1/liuhaohome/tecmint/workspace/check_result_img/all_imgs/" << cur_frame << ".jpg";
-                cur_frame1 >> cur_frame2;
-	        imwrite(cur_frame2, img);   
-             */
-                cout << " ========================cur_frame : "<< cur_frame <<endl;
                 if (img.empty()) {
                     cur_frame += dete_interval;
                     cout << "Wrong Image" << endl;
@@ -466,114 +475,106 @@ vector<vector<BBOX> > get_detection_result_for_video(string f_ ,CaffeModel& ssd_
                 }
                 vector<BBOX> out = nms(total);
                 float threshold[5] = {0, 0.8, 0.6, 0.5, 0.2};
-                float min_distance = 10000;
-                float xmin_min = 0;
-                float ymin_min = 0;
-                float xmax_min = 0;
-                float ymax_min = 0;
-                for(int j = 0; j < out.size(); j++) {
+                float max_IOU = 0.3;
+                int xmin_min = 0;
+                int ymin_min = 0;
+                int xmax_min = 0;
+                int ymax_min = 0;
+                for(int j = 0; j < out.size(); j++){
                     int cls = out[j].cls;
-                
                     float score = out[j].conf;
-                    float xmin = out[j].rect.x; 
-                    float ymin = out[j].rect.y;
-                    float xmax = out[j].rect.x + out[j].rect.width; 
-                    float ymax = out[j].rect.y + out[j].rect.height; 
-                    
-                    float x_centre = out[j].rect.x + 0.5 * out[j].rect.width; 
-                    float y_centre = out[j].rect.y + 0.5 * out[j].rect.height; 
-
-
-                    if (score > 0.4) {
+                    if(score > 0.4){
                         char char_score[100];
                         sprintf(char_score, "%.3f", score);
-
-                        if(cls == 3 || cls == 4){          // **************************** crop image *************************************
-                            fprintf(fid, "%.2f %.2f %.2f %.2f %.2f \n",score, xmin, ymin, xmax, ymax);                        
-                            float distance1 = sqrt((bz_x_centre - x_centre)*(bz_x_centre - x_centre) + (bz_y_centre - y_centre)*(bz_y_centre - y_centre));
-                          
-                          /*  for (int dx = 1; dx <= 1; dx ++) {
-                                for (int dy = 1; dy <= 1; dy ++) {
-                                    rectangle(img, Rect(xmin+dx, ymin+dy, xmax-xmin+dx+dx, ymax-ymin+dx+dx), color[cls]);
-                                }
-                            }*/
-
-                            if (distance1 < min_distance){
-                                min_distance = distance1;
-                                xmin_min = xmin;
-                                ymin_min = ymin;
-                                xmax_min = xmax;
-                                ymax_min = ymax; }
-
-                            cout << " ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~distance1: "<< distance1  << endl;
-
+                        if (cls == 3 || cls == 4){
+                            
+                            
+                            float _IOU = IOU(bz_x, bz_y, bz_w, bz_h, out[j].rect.x, out[j].rect.y, out[j].rect.width, out[j].rect.height);
+                            if(_IOU >= max_IOU){
+                                max_IOU = _IOU;
+                                xmin_min = out[j].rect.x;
+                                ymin_min = out[j].rect.y;
+                                xmax_min = out[j].rect.x + out[j].rect.width;
+                                ymax_min = out[j].rect.y + out[j].rect.height;
+                                printf("KKKKKKKKKKKKKKKKKKKKmax_IOU:%f\n_IOU:%f\n",max_IOU,_IOU);  }
                         }
-                        ///fprintf(fid, "%d %.2f %.2f %.2f %.2f %.2f ", cls, score, xmin, ymin, xmax, ymax);
-                   //     BBOX bbox;
-                   //     bbox.cls = cls;
-                   //     bbox.conf = score;
-                
-                   //     int lx = max(0, xmin);
-                   //     int ly = max(0, ymin);
-                   //     int rx = min(img.cols, xmax);
-                   //     int ry = min(img.rows, ymax);
-                   //     Rect rect(lx ,ly, max(0, rx - lx), max(0, ry - ly));
-                   //     bbox.rect  = rect;
-                        //result_this_image.push_back(bbox);
-                   //     cout << "running into get car model result" << endl;
-                        //get_car_model_result(result_this_image, img);
                     }
+                 //  rectangle(img, Rect(xmin_min, ymin_min, xmax_min - xmin_min, ymax_min - ymin_min), color[3]);
                 }
-
-                cout << " ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~min_distance: "<< min_distance  << endl;
-
-                
-            /*    string cur_frame4;
-                stringstream cur_frame3;
-                cur_frame3 << "/mnt/sde1/liuhaohome/wubingfang/liuyang_data/result_img1/"<< cur_frame << ".jpg";
-                cur_frame3 >> cur_frame4;             
-	                    
-	        imwrite(cur_frame4, img);  //########################################################################################3
-
-                */
-
+                if(max_IOU <= 0.3) continue;
                 int margin_x = 0.3 * (xmax_min - xmin_min);
                 int margin_y = 0.3 * (ymax_min - ymin_min);
-
                 int lx = max(0, xmin_min - margin_x);
                 int ly = max(0, ymin_min - margin_y);
                 int rx = min(img.cols, xmax_min + margin_x);
                 int ry = min(img.rows, ymax_min + margin_y);
-                
                 Rect rect(lx ,ly, max(0, rx - lx), max(0, ry - ly));
               //  Rect rect(max(0,xmin_min-15) ,max(0,ymin_min-15) , max(0, xmax_min - xmin_min+30), max(0, ymax_min - ymin_min+30))
+              // rectangle(img, Rect(xmax_min, ymax_min, margin_x, margin_y), color[3]);
                 Mat image_crop = Mat(img, rect);
                 Mat image_copy = image_crop.clone();
                // imwrite(bbox_test_name,img);
                 //14.55
                 int tx = max(xmin_min - margin_x, xmin_min), ty = max(ymin_min - margin_y, ymin_min);
                 int ttx = min(xmax_min + margin_x, xmax_min) ,tty = min(ymax_min + margin_y, ymax_min);
+                if(rx - lx == 0 || ry -ly == 0) continue;
+                ans += 1;
                 printf("555555555555555555555555\n");
+                printf("ans=%d\n",ans);
+                printf("Max_IOU:%f",max_IOU);
                 printf("%d %d %d %d\n",tx,ty,ttx,tty);
                 printf("%d %d %d %d\n",lx,ly,rx,ry);
                 printf("%d %d\n",margin_x,margin_y);
                 printf("%f %f %f %f\n",xmin_min,ymin_min,xmax_min,ymax_min);
                 printf("%d %d\n",img.cols,img.rows);
+                
                 imwrite(bbox_file_name, image_copy);
                 Mat M_img = imread(bbox_file_name);
-                printf("********M_img.cols*****%d************\n",M_img.cols);
+                printf("********M_img.cols*****%d***M_img.rows*%d********\n",M_img.cols,M_img.rows);
                 printf("********rx-lx%d**********************\n",rx-lx);
-                if(xmax_min + margin_x >= img.cols || ymax_min + margin_y >= img.rows || xmin_min - margin_x < 0 || ymin_min - margin_y < 0){
+                
+                int xx = max(0,margin_x - xmin_min);
+                int yy = max(0,margin_y - ymin_min);
+                printf("*****%d %d*******\n",img.rows, img.cols);
+                printf("*******%d %d*****\n",xx,yy);  
+                printf("*******%d %d*****\n",xmax_min + margin_x - img.cols, ymax_min + margin_y - img.rows);
+                printf("******%d %d******\n",ymax_min - ymin_min + 2 * margin_y, xmax_min - xmin_min + 2 * margin_x); 
+            //    rectangle(M_img, Rect(xmax_min, ymax_min, margin_x, margin_y), color[3]);
+                if(int(xmax_min + margin_x) > img.cols || int(ymax_min + margin_y) > img.rows || int(xmin_min - margin_x) < 0 || int(ymin_min - margin_y) < 0){
                //     Mat M_img = imread(bbox_file_name);
                  //   printf("*************%d************\n",M_img.cols);
                     Mat M(ymax_min - ymin_min + 2 * margin_y, xmax_min - xmin_min + 2 * margin_x, CV_8UC3);
                     for(int i = 0; i < M.rows; i++){
                         for(int j = 0; j < M.cols; j++){
                             for(int k = 0; k < 3; k++)
-                                M.at<Vec3b>(i,j)[k] = 20;
+                                M.at<Vec3b>(i,j)[k] = 30;
                         }
                     }
-                   if(xmax_min + margin_x >= img.cols || ymax_min + margin_y >= img.rows){
+                //  int oo = max(xmax_min + margin_x - img.cols, ymax_min + margin_y > img.rows);
+              //    int pp = max(x_min + margin_y > img.rows, margin_y - ymin_min);
+                //  int xx = max(0,margin_x - xmin_min);
+                //  int yy = max(0,margin_y - ymin_min);
+                 // printf("*******%d %d*****",xx,yy);  
+                //  printf("*******%d %d*****",margin_x - xmin_min,margin_y - ymin_min);
+               //  if(xmax_min + margin_x - img.cols > margin_x - xmin_min){
+                        for(int i = 0; i + yy < M.rows; i++)
+                            for(int j = 0; j + xx < M.cols; j++)
+                                if(i <= M_img.rows && j <= M_img.cols)
+                                    for(int k = 0; k < 3; k++)
+                                        M.at<Vec3b>(i + yy,j + xx)[k] = M_img.at<Vec3b>(i,j)[k];
+                //  }
+                 /*
+                  else{
+                        for(int i = 0; i < ymax_min + margin_y; i++)
+                            for(int j = 0; j + xx < M.cols; j++)
+                                if(i <= M_img.rows && j <= M_img.cols)
+                                    for(int k = 0; k < 3; k++)
+                                        M.at<Vec3b>(i,j + xx)[k] = M_img.at<Vec3b>(i,j)[k];
+
+                  }
+                 */
+                /*
+                   if(xmax_min + margin_x > img.cols || ymax_min + margin_y > img.rows){
                         for(int i = 0; i < M.rows; i++){
                             for(int j = 0; j < M.cols; j++){
                                 if(i <= M_img.rows && j <= M_img.cols){
@@ -584,7 +585,7 @@ vector<vector<BBOX> > get_detection_result_for_video(string f_ ,CaffeModel& ssd_
                             }
                         }
                     }
-                   else if(xmin_min - margin_x < 0 || ymin_min - margin_y < 0){
+                    else if(xmin_min - margin_x < 0 || ymin_min - margin_y < 0){
                         int xx = max(0,margin_x - xmin_min);
                         int yy = max(0,margin_y - ymin_min);
                         for(int i = 0; i + yy < M.rows; i++)
@@ -592,24 +593,22 @@ vector<vector<BBOX> > get_detection_result_for_video(string f_ ,CaffeModel& ssd_
                                 if(i <= M_img.rows && j <= M_img.cols)
                                     for(int k = 0; k < 3; k++)
                                         M.at<Vec3b>(i + yy,j + xx)[k] = M_img.at<Vec3b>(i,j)[k];
-                    }   
+                    }  */ 
+              //      rectangle(M, Rect(xmax_min, ymax_min, margin_x, margin_y), color[3]);
                     Mat M_ = M.clone();
-                    imwrite(bbox_test_name,M_);
+                    imwrite(bbox_file_name,M_);
                 }
-                Rect rect_t(tx, ty, max(ttx - tx,0),max( tty - ty,0));
-                Mat img_test = Mat(img, rect_t);
-                Mat img_t = img_test.clone();
-               // imwrite(bbox_test_name , img_t);
-                
-                cout << " =============+++++===========crop image  lx: "<< lx << "  ly:  " <<  ly << "  rx:  " << rx << "  ry:  " << ry << endl;
-                // imwrite(bbox_file_name, image_copy);
 
-            }
+
+                //star
+                //cout << " =============+++++===========crop image  lx: "<< lx << "  ly:  " <<  ly << "  rx:  " << rx << "  ry:  " << ry << endl;
+                // imwrite(bbox_file_name, image_copy);
+                }
+             } 
+         }
             //ret.push_back(result_this_image);
              //   fprintf(fid, "\n");
           //  cur_frame += dete_interval;
-        }
-    }
    // fclose(fcin);
     in_video.release();
     fclose(fid);
